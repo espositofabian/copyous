@@ -28,7 +28,7 @@ runs:
       shell: bash
       run: |
         sudo apt update
-        sudo apt install -y meson gettext python3-docutils libglib2.0-dev libgnome-autoar-0-dev libjson-glib-dev libsoup-3.0-dev
+        sudo apt install -y meson gettext libglib2.0-dev libgnome-autoar-0-dev libjson-glib-dev libsoup-3.0-dev
 
     - name: Install Gnome Extensions Tool
       if: inputs.install-gnome-extensions-tool == 'true'
@@ -36,6 +36,6 @@ runs:
       working-directory: ./submodules/gnome-shell/subprojects/extensions-tool
       run: |
         ./generate-translations.sh
-        meson setup build
+        meson setup --prefix=/usr --buildtype=release -Dman=false build
         meson compile -C build
         meson install -C build
