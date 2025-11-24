@@ -1,7 +1,7 @@
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 
-import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
+import { ConsoleLike, Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 
 import type { HLJSApi } from 'highlight.js';
 import type { LanguageFn } from 'highlight.js';
@@ -17,6 +17,9 @@ import { ClipboardDialog } from './lib/ui/clipboardDialog.js';
 import { ClipboardIndicator } from './lib/ui/indicator.js';
 
 export default class CopyousExtension extends Extension {
+	public settings!: Gio.Settings;
+	public logger!: ConsoleLike;
+
 	public hljs: HLJSApi | null | undefined;
 	private hljsMonitor: Gio.FileMonitor | undefined;
 	private hljsLanguages: Map<string, boolean> | undefined;
@@ -32,7 +35,6 @@ export default class CopyousExtension extends Extension {
 
 	public shortcutsManager: ShortcutManager | undefined;
 
-	private settings: Gio.Settings | undefined;
 	private entryTracker: ClipboardEntryTracker | undefined;
 	private historyTimeoutId: number = -1;
 	private updateHistory: boolean = false;
@@ -40,8 +42,9 @@ export default class CopyousExtension extends Extension {
 	public clipboardManager: ClipboardManager | undefined;
 
 	override enable() {
-		const logger = this.getLogger();
-		const error = logger.error.bind(logger);
+		this.settings = this.getSettings();
+		this.logger = this.getLogger();
+		const error = this.logger.error.bind(this.logger);
 
 		// Highlight.js
 		this.initHljs().catch(error);
@@ -86,7 +89,6 @@ export default class CopyousExtension extends Extension {
 		this.initEntryTracker().catch(error);
 		this.initHistoryTimeout().catch(error);
 
-		this.settings = this.getSettings();
 		this.settings.connectObject(
 			'changed::database-location',
 			this.initEntryTracker.bind(this),
@@ -186,7 +188,7 @@ export default class CopyousExtension extends Extension {
 					this.hljs?.registerLanguage(name, language.default);
 					this.hljsLanguages?.set(name, true);
 				} catch {
-					this.getLogger().error(`Failed to register language "${name}"`);
+					this.logger.error(`Failed to register language "${name}"`);
 				}
 			}),
 		);
@@ -221,8 +223,7 @@ export default class CopyousExtension extends Extension {
 			if (this.updateHistory) return GLib.SOURCE_CONTINUE;
 
 			if (this.entryTracker?.checkOldest()) {
-				const logger = this.getLogger();
-				this.entryTracker?.deleteOldest().catch(logger.error.bind(logger));
+				this.entryTracker?.deleteOldest().catch(this.logger.error.bind(this.logger));
 			}
 
 			return GLib.SOURCE_CONTINUE;
@@ -249,6 +250,7 @@ export default class CopyousExtension extends Extension {
 
 		// Feedback
 		this.notificationManager = undefined;
+		this.soundManager?.destroy();
 		this.soundManager = undefined;
 
 		// Shortcuts
@@ -256,11 +258,8 @@ export default class CopyousExtension extends Extension {
 		this.shortcutsManager = undefined;
 
 		// Database
-		this.settings?.disconnectObject(this);
-		this.settings = undefined;
-
-		const logger = this.getLogger();
-		this.entryTracker?.destroy().catch(logger.error.bind(logger));
+		const error = this.logger.error.bind(this.logger);
+		this.entryTracker?.destroy().catch(error);
 		this.entryTracker = undefined;
 
 		if (this.historyTimeoutId >= 0) GLib.source_remove(this.historyTimeoutId);
@@ -269,6 +268,11 @@ export default class CopyousExtension extends Extension {
 		// Clipboard Manager
 		this.clipboardManager?.destroy();
 		this.clipboardManager = undefined;
+
+		// Globals
+		this.settings?.disconnectObject(this);
+		this.settings = undefined!;
+		this.logger = undefined!;
 	}
 
 	/* DEBUG-ONLY */

@@ -1,6 +1,5 @@
 import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
 import Graphene from 'gi://Graphene';
 import Shell from 'gi://Shell';
 import St from 'gi://St';
@@ -47,7 +46,6 @@ export class ClipboardDialog extends St.Widget {
 
 	private _orientation: Clutter.Orientation = Clutter.Orientation.HORIZONTAL;
 
-	private settings: Gio.Settings;
 	private readonly _ibusManager: IBusManager.IBusManager;
 
 	private readonly _monitorConstraint: Layout.MonitorConstraint;
@@ -71,8 +69,6 @@ export class ClipboardDialog extends St.Widget {
 			visible: false,
 			reactive: true,
 		});
-
-		this.settings = ext.getSettings();
 
 		this._monitorConstraint = new Layout.MonitorConstraint({ workArea: true });
 		this.add_constraint(this._monitorConstraint);
@@ -165,7 +161,7 @@ export class ClipboardDialog extends St.Widget {
 
 		// Bind properties
 		// prettier-ignore
-		this.settings.connectObject(
+		this.ext.settings.connectObject(
 			'changed::show-at-pointer', this.updatePosition.bind(this),
 			'changed::clipboard-orientation', this.updatePosition.bind(this),
 			'changed::clipboard-position-horizontal', this.updatePosition.bind(this),
@@ -188,7 +184,7 @@ export class ClipboardDialog extends St.Widget {
 	override destroy() {
 		(Main.inputMethod as Clutter.InputMethod).disconnectObject(this);
 		this._ibusManager.disconnectObject(this);
-		this.settings.disconnectObject(this);
+		this.ext.settings.disconnectObject(this);
 
 		super.destroy();
 	}
@@ -343,11 +339,11 @@ export class ClipboardDialog extends St.Widget {
 			})();
 
 			if (!item) {
-				this.ext.getLogger().error('Unknown item type', entry);
+				this.ext.logger.error('Unknown item type', entry);
 				return;
 			}
 		} catch (e) {
-			this.ext.getLogger().error(e);
+			this.ext.logger.error(e);
 			return;
 		}
 
@@ -400,7 +396,7 @@ export class ClipboardDialog extends St.Widget {
 			this._dialog.remove_style_class_name('show-header');
 		}
 
-		this._headerLayout.enableCollapse = this.settings.get_boolean('auto-hide-search');
+		this._headerLayout.enableCollapse = this.ext.settings.get_boolean('auto-hide-search');
 
 		const value = Number(show);
 		if (animate) {
@@ -414,11 +410,11 @@ export class ClipboardDialog extends St.Widget {
 	}
 
 	private updatePosition() {
-		const showAtPointer = this.settings.get_boolean('show-at-pointer');
-		this._orientation = this.settings.get_enum('clipboard-orientation');
-		const positionVertical = this.settings.get_enum('clipboard-position-vertical');
-		const positionHorizontal = this.settings.get_enum('clipboard-position-horizontal');
-		const size = this.settings.get_int('clipboard-size');
+		const showAtPointer = this.ext.settings.get_boolean('show-at-pointer');
+		this._orientation = this.ext.settings.get_enum('clipboard-orientation');
+		const positionVertical = this.ext.settings.get_enum('clipboard-position-vertical');
+		const positionHorizontal = this.ext.settings.get_enum('clipboard-position-horizontal');
+		const size = this.ext.settings.get_int('clipboard-size');
 
 		this._scrollView.orientation = this._orientation;
 		this._widthConstraint.enabled = this._orientation === Clutter.Orientation.VERTICAL;
@@ -448,10 +444,10 @@ export class ClipboardDialog extends St.Widget {
 	}
 
 	private updateMargins() {
-		const top = this.settings.get_int('clipboard-margin-top');
-		const right = this.settings.get_int('clipboard-margin-right');
-		const bottom = this.settings.get_int('clipboard-margin-bottom');
-		const left = this.settings.get_int('clipboard-margin-left');
+		const top = this.ext.settings.get_int('clipboard-margin-top');
+		const right = this.ext.settings.get_int('clipboard-margin-right');
+		const bottom = this.ext.settings.get_int('clipboard-margin-bottom');
+		const left = this.ext.settings.get_int('clipboard-margin-left');
 
 		this._dialog.set_style(`margin: ${top}px ${right}px ${bottom}px ${left}px;`);
 	}
@@ -466,10 +462,10 @@ export class ClipboardDialog extends St.Widget {
 
 	private updateFitConstraint() {
 		// Update fit constraint position to current pointer position
-		const showAtPointer = this.settings.get_boolean('show-at-pointer');
+		const showAtPointer = this.ext.settings.get_boolean('show-at-pointer');
 		if (!showAtPointer) return;
 
-		const showAtCursor = this.settings.get_boolean('show-at-cursor');
+		const showAtCursor = this.ext.settings.get_boolean('show-at-cursor');
 		const [x, y] = (showAtCursor ? this._cursor : null) ?? global.get_pointer();
 
 		const ws = global.workspace_manager.get_active_workspace();
@@ -595,7 +591,7 @@ export class ClipboardDialog extends St.Widget {
 		this.updateFitConstraint();
 
 		// Update header with search
-		const autoHide = this.settings.get_boolean('auto-hide-search');
+		const autoHide = this.ext.settings.get_boolean('auto-hide-search');
 		this.updateHeader(!autoHide, false);
 
 		// Navigate to first item

@@ -5,7 +5,7 @@ import Gio from 'gi://Gio';
 import Meta from 'gi://Meta';
 import St from 'gi://St';
 
-import CopyousExtension from '../../extension.js';
+import type CopyousExtension from '../../extension.js';
 import { Color } from '../common/color.js';
 import { ItemType, getImagesPath } from '../common/constants.js';
 import { registerClass } from '../common/gjs.js';
@@ -62,7 +62,6 @@ function contentChecksum(content: ClipboardContent): string | null {
 	},
 })
 export class ClipboardManager extends GObject.Object {
-	private settings: Gio.Settings;
 	private selection: Meta.Selection;
 	private clipboard: St.Clipboard;
 	private keyboard: Keyboard;
@@ -76,8 +75,6 @@ export class ClipboardManager extends GObject.Object {
 		private tracker: ClipboardEntryTracker,
 	) {
 		super();
-
-		this.settings = ext.getSettings();
 
 		this.selection = global.display.get_selection();
 		this.clipboard = St.Clipboard.get_default();
@@ -103,7 +100,7 @@ export class ClipboardManager extends GObject.Object {
 		// Text
 		if (content.type === ContentType.Text) {
 			this.clipboard.set_text(St.ClipboardType.CLIPBOARD, content.text);
-			if (this.settings.get_boolean('sync-primary')) {
+			if (this.ext.settings.get_boolean('sync-primary')) {
 				this.clipboard.set_text(St.ClipboardType.PRIMARY, content.text);
 			}
 			return;
@@ -127,7 +124,7 @@ export class ClipboardManager extends GObject.Object {
 	public pasteContent(content: ClipboardContent) {
 		this.copyContent(content);
 
-		if (!this.settings.get_boolean('paste-on-copy')) return;
+		if (!this.ext.settings.get_boolean('paste-on-copy')) return;
 
 		if (this.pasteSignalId >= 0) GLib.source_remove(this.pasteSignalId);
 		this.pasteSignalId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 250, () => {
@@ -168,7 +165,7 @@ export class ClipboardManager extends GObject.Object {
 	}
 
 	public async pasteEntry(entry: ClipboardEntry) {
-		if (this.settings.get_boolean('update-date-on-copy')) {
+		if (this.ext.settings.get_boolean('update-date-on-copy')) {
 			entry.datetime = GLib.DateTime.new_now_utc();
 		}
 
@@ -202,11 +199,11 @@ export class ClipboardManager extends GObject.Object {
 	private shouldSave(): boolean {
 		const window = global.display.focus_window;
 		if (window) {
-			const exclusions = this.settings.get_strv('wmclass-exclusions');
+			const exclusions = this.ext.settings.get_strv('wmclass-exclusions');
 			if (exclusions.includes(window.wm_class)) return false;
 		}
 
-		return !this.settings.get_boolean('incognito');
+		return !this.ext.settings.get_boolean('incognito');
 	}
 
 	private async ownerChanged(
@@ -253,7 +250,7 @@ export class ClipboardManager extends GObject.Object {
 				this.emit('clipboard', entry);
 			}
 		} catch (e) {
-			this.ext.getLogger().error(e);
+			this.ext.logger.error(e);
 		}
 	}
 
@@ -338,7 +335,7 @@ export class ClipboardManager extends GObject.Object {
 
 			// Character
 			const iterator = new Intl.Segmenter().segment(trimmed)[Symbol.iterator]();
-			const maxCharacters = this.settings.get_child('character-item').get_int('max-characters');
+			const maxCharacters = this.ext.settings.get_child('character-item').get_int('max-characters');
 			for (let i = 0; i < maxCharacters; i++) iterator.next();
 			if (!iterator.next().value) {
 				return [ItemType.Character, content.text, null];

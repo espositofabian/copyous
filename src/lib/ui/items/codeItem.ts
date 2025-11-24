@@ -22,7 +22,7 @@ export class CodeItem extends ClipboardItem {
 	constructor(ext: CopyousExtension, entry: ClipboardEntry) {
 		super(ext, entry, Icon.Code, _('Code'));
 
-		this.codeItemSettings = ext.getSettings().get_child('code-item');
+		this.codeItemSettings = this.ext.settings.get_child('code-item');
 
 		this.add_style_class_name('code-item');
 
@@ -48,7 +48,7 @@ export class CodeItem extends ClipboardItem {
 			this,
 		);
 
-		this.settings.connectObject('changed::tab-width', this.updateCode.bind(this), this._code);
+		this.ext.settings.connectObject('changed::tab-width', this.updateCode.bind(this), this._code);
 
 		// Update label
 		this.entry.bind_property('content', this._code, 'code', GObject.BindingFlags.SYNC_CREATE);
@@ -71,7 +71,7 @@ export class CodeItem extends ClipboardItem {
 	private updateCode() {
 		this._code.syntaxHighlighting = this.codeItemSettings.get_boolean('syntax-highlighting');
 		this._code.showLineNumbers = this.codeItemSettings.get_boolean('show-line-numbers');
-		this._code.tabWidth = this.settings.get_int('tab-width');
+		this._code.tabWidth = this.ext.settings.get_int('tab-width');
 	}
 
 	private updateCodeInfo() {
@@ -91,7 +91,7 @@ export class CodeItem extends ClipboardItem {
 
 	override destroy() {
 		this.codeItemSettings.disconnectObject(this);
-		this.settings.disconnectObject(this._code);
+		this.ext.settings.disconnectObject(this._code);
 
 		super.destroy();
 	}

@@ -4,7 +4,7 @@ import Gio from 'gi://Gio';
 import Pango from 'gi://Pango';
 import St from 'gi://St';
 
-import { Extension, gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
+import { gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
 
 import type CopyousExtension from '../../../extension.js';
 import { ActiveState } from '../../common/constants.js';
@@ -52,7 +52,7 @@ export class LinkPreview extends St.Widget {
 	private readonly _singleUrl: St.Label;
 
 	constructor(
-		private ext: Extension,
+		private ext: CopyousExtension,
 		url: string,
 	) {
 		super({
@@ -283,7 +283,7 @@ export class LinkItem extends ClipboardItem {
 	constructor(ext: CopyousExtension, entry: ClipboardEntry) {
 		super(ext, entry, Icon.Link, _('Link'));
 
-		this.linkItemSettings = ext.getSettings().get_child('link-item');
+		this.linkItemSettings = this.ext.settings.get_child('link-item');
 
 		this.add_style_class_name('link-item');
 
@@ -297,7 +297,7 @@ export class LinkItem extends ClipboardItem {
 
 		// Bind properties
 		this.linkItemSettings.connectObject('changed', this.updateLinkPreview.bind(this), this);
-		this.settings.connectObject('changed::show-header', this.updateLinkPreview.bind(this), this);
+		this.ext.settings.connectObject('changed::show-header', this.updateLinkPreview.bind(this), this);
 
 		this.bind_property('active', this._linkPreview, 'active', GObject.BindingFlags.DEFAULT);
 
@@ -327,7 +327,7 @@ export class LinkItem extends ClipboardItem {
 		const showLinkPreviewImage = this.linkItemSettings.get_boolean('show-link-preview-image');
 		const backgroundSize = this.linkItemSettings.get_enum('link-preview-image-background-size') as BackgroundSize;
 		const orientation = this.linkItemSettings.get_enum('link-preview-orientation');
-		const showHeader = this.settings.get_boolean('show-header');
+		const showHeader = this.ext.settings.get_boolean('show-header');
 		const show = showLinkPreview && !regex?.test(url);
 
 		this._linkPreview.visible = show;

@@ -9,7 +9,7 @@ import { ShortcutRow } from './shortcutRow.js';
 
 @registerClass()
 export class DialogShortcuts extends Adw.PreferencesGroup {
-	constructor(_ext: ExtensionPreferences) {
+	constructor(prefs: ExtensionPreferences) {
 		super({
 			title: _('Dialog'),
 		});
@@ -21,7 +21,7 @@ export class DialogShortcuts extends Adw.PreferencesGroup {
 		this.add(toggleIncognito);
 
 		// Bind properties
-		const settings = _ext.getSettings();
+		const settings = prefs.getSettings();
 		settings.bind('open-clipboard-dialog-shortcut', openDialog, 'shortcuts', Gio.SettingsBindFlags.DEFAULT);
 		settings.bind('toggle-incognito-mode-shortcut', toggleIncognito, 'shortcuts', Gio.SettingsBindFlags.DEFAULT);
 

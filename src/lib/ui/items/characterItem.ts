@@ -21,7 +21,7 @@ export class CharacterItem extends ClipboardItem {
 	constructor(ext: CopyousExtension, entry: ClipboardEntry) {
 		super(ext, entry, Icon.Character, _('Char'));
 
-		this.characterItemSettings = ext.getSettings().get_child('character-item');
+		this.characterItemSettings = this.ext.settings.get_child('character-item');
 
 		this.add_style_class_name('character-item');
 

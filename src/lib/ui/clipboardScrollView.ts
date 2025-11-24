@@ -1,6 +1,5 @@
 import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
 import St from 'gi://St';
 
 import type CopyousExtension from '../../extension.js';
@@ -21,15 +20,13 @@ import { SearchQuery } from './searchEntry.js';
 	},
 })
 export class ClipboardScrollView extends St.ScrollView {
-	private settings: Gio.Settings;
-
 	private _orientation: Clutter.Orientation = Clutter.Orientation.HORIZONTAL;
 	private _itemWidth: number = 0;
 	private _itemHeight: number = 0;
 
 	private readonly _scrollContainer: ClipboardScrollContainer;
 
-	constructor(ext: CopyousExtension) {
+	constructor(private ext: CopyousExtension) {
 		super({
 			style_class: 'clipboard-scroll-view',
 			hscrollbar_policy: St.PolicyType.AUTOMATIC,
@@ -52,8 +49,7 @@ export class ClipboardScrollView extends St.ScrollView {
 		this._scrollContainer.connect('notify::width', this.scrollbarWorkaround.bind(this));
 
 		// Connect properties
-		this.settings = ext.getSettings();
-		this.settings.connectObject(
+		this.ext.settings.connectObject(
 			'changed::show-scrollbar',
 			this.updateScrollbar.bind(this),
 			'changed::item-width',
@@ -97,9 +93,9 @@ export class ClipboardScrollView extends St.ScrollView {
 	}
 
 	private updateScrollbar() {
-		this._itemWidth = this.settings.get_int('item-width');
-		this._itemHeight = this.settings.get_int('item-height');
-		const show = this.settings.get_boolean('show-scrollbar');
+		this._itemWidth = this.ext.settings.get_int('item-width');
+		this._itemHeight = this.ext.settings.get_int('item-height');
+		const show = this.ext.settings.get_boolean('show-scrollbar');
 
 		if (!show) {
 			this.vscrollbarPolicy = St.PolicyType.NEVER;
@@ -203,7 +199,7 @@ export class ClipboardScrollView extends St.ScrollView {
 	}
 
 	override destroy() {
-		this.settings.disconnectObject(this);
+		this.ext.settings.disconnectObject(this);
 
 		super.destroy();
 	}

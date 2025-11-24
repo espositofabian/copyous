@@ -60,7 +60,7 @@ export class FileItem extends ClipboardItem {
 	constructor(ext: CopyousExtension, entry: ClipboardEntry) {
 		super(ext, entry, Icon.File, _('File'));
 
-		this.fileItemSettings = ext.getSettings().get_child('file-item');
+		this.fileItemSettings = this.ext.settings.get_child('file-item');
 
 		this.add_style_class_name('file-item');
 
@@ -76,7 +76,7 @@ export class FileItem extends ClipboardItem {
 
 		// Bind properties
 		this.fileItemSettings.connectObject('changed', this.updateFilePreview.bind(this), this);
-		const logger = this.ext.getLogger();
+		const logger = this.ext.logger;
 		this.updateFilePreview().catch(logger.error.bind(logger));
 	}
 
@@ -149,7 +149,7 @@ export class FileItem extends ClipboardItem {
 				this.configureVisibility();
 
 				if (this._filePreview instanceof TextPreview) {
-					this.settings.connectObject('changed::tab-width', this.configureFilePreview.bind(this), this);
+					this.ext.settings.connectObject('changed::tab-width', this.configureFilePreview.bind(this), this);
 				} else if (this._filePreview instanceof ImagePreview) {
 					// Hover effect
 					this.bind_property('active', this._filePreview, 'active', GObject.BindingFlags.DEFAULT);
@@ -159,7 +159,7 @@ export class FileItem extends ClipboardItem {
 			if (this._filePreview instanceof TextPreview) {
 				this._filePreview.syntaxHighlighting = this.fileItemSettings.get_boolean('syntax-highlighting');
 				this._filePreview.showLineNumbers = this.fileItemSettings.get_boolean('show-line-numbers');
-				this._filePreview.tabWidth = this.settings.get_int('tab-width');
+				this._filePreview.tabWidth = this.ext.settings.get_int('tab-width');
 			} else if (this._filePreview instanceof ImagePreview) {
 				this._filePreview.backgroundSize = this.fileItemSettings.get_enum('background-size') as BackgroundSize;
 			}

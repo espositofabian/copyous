@@ -4,6 +4,7 @@ import Soup from 'gi://Soup';
 
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 
+import type CopyousExtension from '../../extension.js';
 import { UserAgent, getCachePath } from '../common/constants.js';
 import { LinkMetadata } from './db.js';
 
@@ -14,7 +15,7 @@ Gio._promisify(Gio.File.prototype, 'replace_async');
 Gio._promisify(Gio.File.prototype, 'replace_contents_async');
 Gio._promisify(Gio.OutputStream.prototype, 'splice_async');
 
-export async function tryGetMetadata(ext: Extension, url: string): Promise<LinkMetadata> {
+export async function tryGetMetadata(ext: CopyousExtension, url: string): Promise<LinkMetadata> {
 	const empty: LinkMetadata = { title: null, description: null, image: null };
 
 	try {
@@ -117,7 +118,7 @@ export async function tryGetMetadata(ext: Extension, url: string): Promise<LinkM
 
 		return { title: title, description: description, image: image };
 	} catch (err) {
-		ext.getLogger().error('Failed to get metadata', err);
+		ext.logger.error('Failed to get metadata', err);
 	}
 
 	return empty;
@@ -159,7 +160,7 @@ export function getLinkImagePath(ext: Extension, url: string): Gio.File | null {
 	return cacheDir.get_child(checksum);
 }
 
-export async function tryGetLinkImage(ext: Extension, url: string): Promise<Gio.File | null> {
+export async function tryGetLinkImage(ext: CopyousExtension, url: string): Promise<Gio.File | null> {
 	try {
 		// Check if URL is valid
 		const uri = GLib.uri_parse(url, GLib.UriFlags.NONE);
@@ -193,7 +194,7 @@ export async function tryGetLinkImage(ext: Extension, url: string): Promise<Gio.
 		await imagePath.replace_contents_async(data, null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null);
 		return imagePath;
 	} catch {
-		ext.getLogger().error('Failed to get link image');
+		ext.logger.error('Failed to get link image');
 	}
 
 	return null;

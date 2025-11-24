@@ -170,7 +170,7 @@ export class ActionPopupMenuSection extends PopupMenu.PopupMenuSection<ActionPop
 		if (!defaultAction) return false;
 		if (!testAction(entry, defaultAction)) return false;
 
-		const logger = this.ext.getLogger();
+		const logger = this.ext.logger;
 		this.run(entry, defaultAction).catch(logger.error.bind(logger));
 		return true;
 	}
@@ -180,7 +180,7 @@ export class ActionPopupMenuSection extends PopupMenu.PopupMenuSection<ActionPop
 		if (!action) return false;
 		if (!testAction(entry, action)) return false;
 
-		const logger = this.ext.getLogger();
+		const logger = this.ext.logger;
 		this.run(entry, action).catch(logger.error.bind(logger));
 		return true;
 	}
@@ -232,10 +232,10 @@ export class ActionPopupMenuSection extends PopupMenu.PopupMenuSection<ActionPop
 						break;
 				}
 			} else {
-				this.ext.getLogger().error(stderr);
+				this.ext.logger.error(stderr);
 			}
 		} catch (e) {
-			this.ext.getLogger().error(e);
+			this.ext.logger.error(e);
 		}
 	}
 

@@ -3,9 +3,7 @@ import GObject from 'gi://GObject';
 import type Gda from 'gi://Gda';
 import Gio from 'gi://Gio';
 
-import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
-
-import CopyousExtension from '../../extension.js';
+import type CopyousExtension from '../../extension.js';
 import { ClipboardHistory, ItemType, Tag, getDataPath } from '../common/constants.js';
 import { int32ParamSpec, registerClass } from '../common/gjs.js';
 import {
@@ -97,13 +95,10 @@ export class ClipboardEntry extends GObject.Object {
 }
 
 export class ClipboardEntryTracker {
-	private _settings: Gio.Settings;
 	private _database: Database | undefined;
 	private _entries: Map<number, ClipboardEntry> = new Map();
 
-	constructor(private ext: CopyousExtension) {
-		this._settings = this.ext.getSettings();
-	}
+	constructor(private ext: CopyousExtension) {}
 
 	async init(): Promise<ClipboardEntry[]> {
 		if (this._database) {
@@ -119,21 +114,20 @@ export class ClipboardEntryTracker {
 				imports.package.require({ Gda: gdaVersion });
 			}
 		} catch (err) {
-			this.ext.getLogger().warn(err);
+			this.ext.logger.warn(err);
 		}
 
 		let gda: typeof Gda | null = null;
 		try {
 			gda = (await import('gi://Gda')).default;
 		} catch {
-			this.ext.getLogger().error('Failed to load Gda');
+			this.ext.logger.error('Failed to load Gda');
 
-			const settings = this.ext.getSettings();
-			if (!settings.get_boolean('disable-gda-warning')) {
+			if (!this.ext.settings.get_boolean('disable-gda-warning')) {
 				this.ext.notificationManager?.warning(
 					_('Failed to load Gda'),
 					_('Clipboard history will be disabled'),
-					[_('Disable Warning'), () => settings.set_boolean('disable-gda-warning', true)],
+					[_('Disable Warning'), () => this.ext.settings.set_boolean('disable-gda-warning', true)],
 				);
 			}
 		}
@@ -141,7 +135,7 @@ export class ClipboardEntryTracker {
 		if (gda) {
 			try {
 				// Create database
-				this.ext.getLogger().log('Using Gda', gda.__version__, 'database');
+				this.ext.logger.log('Using Gda', gda.__version__, 'database');
 				this._database = new GdaDatabase(this.ext, gda);
 				await this._database.init();
 
@@ -154,7 +148,7 @@ export class ClipboardEntryTracker {
 
 				return entries;
 			} catch (e) {
-				this.ext.getLogger().error('Failed to initialize Gda database', e);
+				this.ext.logger.error('Failed to initialize Gda database', e);
 				this.ext.notificationManager?.warning(
 					_('Failed to load database'),
 					_('Clipboard history will be disabled'),
@@ -162,7 +156,7 @@ export class ClipboardEntryTracker {
 			}
 		}
 
-		this.ext.getLogger().log('Using in-memory database');
+		this.ext.logger.log('Using in-memory database');
 		this._database = new MemoryDatabase();
 		await this._database.init();
 		return [];
@@ -171,7 +165,7 @@ export class ClipboardEntryTracker {
 	public async clear(history: ClipboardHistory | null = null) {
 		if (!this._database) return;
 
-		history ??= this._settings.get_enum('clipboard-history') as ClipboardHistory;
+		history ??= this.ext.settings.get_enum('clipboard-history') as ClipboardHistory;
 		const deleted = await this._database.clear(history);
 		deleted.forEach((id) => this.deleteFromDatabase(id));
 	}
@@ -216,7 +210,7 @@ export class ClipboardEntryTracker {
 	}
 
 	public checkOldest(): boolean {
-		const M = this._settings.get_int('history-time');
+		const M = this.ext.settings.get_int('history-time');
 		if (M === 0) return false;
 
 		const now = GLib.DateTime.new_now_utc();
@@ -231,8 +225,8 @@ export class ClipboardEntryTracker {
 	}
 
 	public async deleteOldest() {
-		const N = this._settings.get_int('history-length');
-		const M = this._settings.get_int('history-time');
+		const N = this.ext.settings.get_int('history-length');
+		const M = this.ext.settings.get_int('history-time');
 		const deleted = await this._database?.deleteOldest(N, M);
 		if (deleted) deleted.forEach((id) => this.deleteFromDatabase(id));
 	}
@@ -268,7 +262,7 @@ export class ClipboardEntryTracker {
 					file.delete(null);
 				}
 			} catch {
-				this.ext.getLogger().error('Failed to delete image', entry.content);
+				this.ext.logger.error('Failed to delete image', entry.content);
 			}
 		} else if (entry.type === ItemType.Link && entry.metadata) {
 			// Delete thumbnail image
@@ -280,7 +274,7 @@ export class ClipboardEntryTracker {
 						file.delete(null);
 					}
 				} catch {
-					this.ext.getLogger().error('Failed to delete thumbnail image', metadata.image);
+					this.ext.logger.error('Failed to delete thumbnail image', metadata.image);
 				}
 			}
 		}
@@ -510,19 +504,18 @@ export class GdaDatabase implements Database {
 	private readonly _connection: Gda.Connection;
 
 	constructor(
-		private ext: Extension,
+		private ext: CopyousExtension,
 		gda: typeof Gda,
 	) {
 		this._Gda = gda;
 
-		const settings = ext.getSettings();
-		const location = settings.get_string('database-location');
-		const inMemory = settings.get_boolean('in-memory-database');
+		const location = this.ext.settings.get_string('database-location');
+		const inMemory = this.ext.settings.get_boolean('in-memory-database');
 
 		// Check if DEBUG_COPYOUS_DBPATH is set
 		const environment = GLib.get_environ();
 		const debugPath = GLib.environ_getenv(environment, 'DEBUG_COPYOUS_DBPATH');
-		if (debugPath) ext.getLogger().log('Using debug database');
+		if (debugPath) ext.logger.log('Using debug database');
 
 		// Get database location or use default ${XDG_DATA_HOME}/${EXTENSION UUID}
 		const database = Gio.File.new_for_path(debugPath ?? location);
@@ -599,7 +592,7 @@ export class GdaDatabase implements Database {
 
 			return deleted;
 		} catch (e) {
-			this.ext.getLogger().error('Failed to clear clipboard', e);
+			this.ext.logger.error('Failed to clear clipboard', e);
 		}
 
 		return [];
@@ -659,7 +652,7 @@ export class GdaDatabase implements Database {
 							metadataObj = json as Metadata;
 						}
 					} catch {
-						this.ext.getLogger().error('Failed to parse metadata');
+						this.ext.logger.error('Failed to parse metadata');
 					}
 				}
 
@@ -668,7 +661,7 @@ export class GdaDatabase implements Database {
 
 			return entries;
 		} catch (e) {
-			this.ext.getLogger().error('Failed to get clipboard entries', e);
+			this.ext.logger.error('Failed to get clipboard entries', e);
 		}
 
 		return [];
@@ -710,7 +703,7 @@ export class GdaDatabase implements Database {
 
 			return null;
 		} catch (e) {
-			this.ext.getLogger().error('Failed to select conflicting entry', e);
+			this.ext.logger.error('Failed to select conflicting entry', e);
 		}
 
 		return null;
@@ -745,7 +738,7 @@ export class GdaDatabase implements Database {
 
 			return new ClipboardEntry(id, type, content, false, null, datetime, metadata);
 		} catch (e) {
-			this.ext.getLogger().error('Failed to insert entry', e);
+			this.ext.logger.error('Failed to insert entry', e);
 		}
 
 		return null;
@@ -789,7 +782,7 @@ export class GdaDatabase implements Database {
 			const id = await this.selectConflict(entry);
 			return id ?? -1;
 		} catch (e) {
-			this.ext.getLogger().error(`Failed to update property "${property}" for entry ${entry.id}`, e);
+			this.ext.logger.error(`Failed to update property "${property}" for entry ${entry.id}`, e);
 		}
 
 		return -1;
@@ -814,7 +807,7 @@ export class GdaDatabase implements Database {
 			const stmt = builder.get_statement();
 			await async_statement_execute_non_select(this._Gda, this._connection, stmt);
 		} catch (e) {
-			this.ext.getLogger().error(`Failed to delete entry ${entry.id}`, e);
+			this.ext.logger.error(`Failed to delete entry ${entry.id}`, e);
 		}
 	}
 
@@ -876,7 +869,7 @@ export class GdaDatabase implements Database {
 
 			return deleted;
 		} catch (e) {
-			this.ext.getLogger().error('Failed to delete oldest entries', e);
+			this.ext.logger.error('Failed to delete oldest entries', e);
 		}
 
 		return [];

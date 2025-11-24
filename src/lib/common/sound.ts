@@ -1,12 +1,9 @@
 import GLib from 'gi://GLib';
-import GObject from 'gi://GObject';
 import type GSound from 'gi://GSound';
 import Gio from 'gi://Gio';
 
 import type { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 import type { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
-
-import { registerClass } from './gjs.js';
 
 export const Sound = {
 	None: 'none',
@@ -35,32 +32,18 @@ export async function tryCreateSoundManager(ext: Extension | ExtensionPreference
 	}
 }
 
-@registerClass({
-	Properties: {
-		sound: GObject.ParamSpec.string('sound', null, null, GObject.ParamFlags.READWRITE, Sound.None),
-		volume: GObject.ParamSpec.double('volume', null, null, GObject.ParamFlags.READWRITE, -20, 20, 0),
-	},
-})
-export class SoundManager extends GObject.Object {
-	private _GSound: typeof GSound;
-	private _context: GSound.Context;
+export class SoundManager {
+	private readonly _GSound: typeof GSound;
+	private readonly _context: GSound.Context;
 	private readonly _sounds: { [sound in Sound]?: string | null } = {};
-
-	private _sound: Sound = Sound.None;
-	private _volume: number = 0.0;
+	private readonly _settings: Gio.Settings;
 
 	constructor(gsound: typeof GSound, ext: Extension | ExtensionPreferences) {
-		super();
-
 		this._GSound = gsound;
 		this._context = new gsound.Context();
 		this._context.init(null);
 		this._sounds = SoundManager.initSounds();
-
-		// Bind properties
-		const settings = ext.getSettings();
-		settings.bind('sound', this, 'sound', Gio.SettingsBindFlags.DEFAULT);
-		settings.bind('volume', this, 'volume', Gio.SettingsBindFlags.DEFAULT);
+		this._settings = 'settings' in ext ? (ext.settings as Gio.Settings) : ext.getSettings();
 	}
 
 	private static initSounds(): { [sound in Sound]?: string | null } {
@@ -88,22 +71,8 @@ export class SoundManager extends GObject.Object {
 		return sounds;
 	}
 
-	get sound() {
-		return this._sound;
-	}
-
-	set sound(sound: Sound) {
-		this._sound = sound;
-		this.notify('sound');
-	}
-
-	get volume() {
-		return this._volume;
-	}
-
-	set volume(volume: number) {
-		this._volume = volume;
-		this.notify('volume');
+	destroy() {
+		this._settings.disconnectObject(this);
 	}
 
 	hasSound(sound: Sound): boolean {
@@ -111,8 +80,8 @@ export class SoundManager extends GObject.Object {
 	}
 
 	playSound(sound?: Sound, volume?: number): void {
-		sound ??= this._sound;
-		volume ??= this._volume;
+		sound ??= this._settings.get_string('sound') as Sound;
+		volume ??= this._settings.get_double('volume');
 		if (!(sound in this._sounds)) return;
 
 		const file = this._sounds[sound];

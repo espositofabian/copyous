@@ -257,8 +257,6 @@ class ItemPopupMenu extends PopupMenu.PopupMenu<ItemPopupMenuSignals> {
 	},
 })
 export class SearchEntry extends St.Entry {
-	private _settings: Gio.Settings;
-
 	private _prevSearch: SearchQuery | null = null;
 	private _pinned: boolean = false;
 	private _tag: Tag | null = null;
@@ -268,7 +266,7 @@ export class SearchEntry extends St.Entry {
 	private readonly _itemButton: St.Button;
 	private readonly _menu: ItemPopupMenu;
 
-	constructor(ext: CopyousExtension) {
+	constructor(private ext: CopyousExtension) {
 		super({
 			style_class: 'search-entry',
 			hint_text: _('Type to search'),
@@ -365,8 +363,7 @@ export class SearchEntry extends St.Entry {
 		// Bind properties
 		pinButton.bind_property('checked', this, 'pinned', GObject.BindingFlags.BIDIRECTIONAL);
 
-		this._settings = ext.getSettings();
-		this._settings.connectObject(
+		this.ext.settings.connectObject(
 			'changed::exclude-pinned',
 			this.search.bind(this),
 			'changed::exclude-tagged',
@@ -415,8 +412,8 @@ export class SearchEntry extends St.Entry {
 	}
 
 	get searchQuery(): SearchQuery {
-		const excludePinned = this._settings.get_boolean('exclude-pinned');
-		const excludeTagged = this._settings.get_boolean('exclude-tagged');
+		const excludePinned = this.ext.settings.get_boolean('exclude-pinned');
+		const excludeTagged = this.ext.settings.get_boolean('exclude-tagged');
 
 		let change: SearchChange;
 		if (!this._prevSearch) {
@@ -567,7 +564,7 @@ export class SearchEntry extends St.Entry {
 
 	override vfunc_scroll_event(event: Clutter.Event): boolean {
 		const direction = event.get_scroll_direction();
-		const swap = this._settings.get_boolean('swap-scroll-shortcut');
+		const swap = this.ext.settings.get_boolean('swap-scroll-shortcut');
 		if (direction === Clutter.ScrollDirection.UP || direction === Clutter.ScrollDirection.LEFT) {
 			if (event.has_control_modifier() !== swap) {
 				this.prevTag();
@@ -588,7 +585,7 @@ export class SearchEntry extends St.Entry {
 	override vfunc_unmap(): void {
 		super.vfunc_unmap();
 
-		if (!this._settings.get_boolean('remember-search')) {
+		if (!this.ext.settings.get_boolean('remember-search')) {
 			this.text = '';
 			this.pinned = false;
 			this.tag = null;
@@ -597,7 +594,7 @@ export class SearchEntry extends St.Entry {
 	}
 
 	override destroy() {
-		this._settings.disconnectObject(this);
+		this.ext.settings.disconnectObject(this);
 		this._menu.destroy();
 
 		super.destroy();

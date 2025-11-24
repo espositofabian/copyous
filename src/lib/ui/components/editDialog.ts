@@ -11,7 +11,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as ModalDialog from 'resource:///org/gnome/shell/ui/modalDialog.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 
-import CopyousExtension from '../../../extension.js';
+import type CopyousExtension from '../../../extension.js';
 import { ItemType } from '../../common/constants.js';
 import { registerClass } from '../../common/gjs.js';
 import { Icon } from '../../common/icons.js';

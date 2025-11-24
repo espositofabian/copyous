@@ -6,7 +6,7 @@ import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-import CopyousExtension from '../../../extension.js';
+import type CopyousExtension from '../../../extension.js';
 import { registerClass } from '../../common/gjs.js';
 import { Language } from '../../misc/db.js';
 import { normalizeIndentation, trim } from './label.js';

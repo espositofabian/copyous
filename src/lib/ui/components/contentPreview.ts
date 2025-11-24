@@ -6,7 +6,7 @@ import St from 'gi://St';
 
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 
-import CopyousExtension from '../../../extension.js';
+import type CopyousExtension from '../../../extension.js';
 import { ActiveState } from '../../common/constants.js';
 import { enumParamSpec, flagsParamSpec, registerClass } from '../../common/gjs.js';
 import { Icon } from '../../common/icons.js';
@@ -297,7 +297,7 @@ export async function tryCreateFilePreview(
 	fileType: FileType,
 	thumbnail: Gio.File | null,
 ): Promise<ContentPreview | null> {
-	const allowedTypes = ext.getSettings().get_child('file-item').get_flags('file-preview-types');
+	const allowedTypes = ext.settings.get_child('file-item').get_flags('file-preview-types');
 
 	try {
 		if (!file.query_exists(null)) return null;
@@ -311,7 +311,7 @@ export async function tryCreateFilePreview(
 
 		return thumbnail && allowedTypes & FilePreviewType.Thumbnail ? new ThumbnailPreview(ext, file) : null;
 	} catch (error) {
-		ext.getLogger().error(error);
+		ext.logger.error(error);
 		return null;
 	}
 }

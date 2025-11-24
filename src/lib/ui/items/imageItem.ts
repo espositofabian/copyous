@@ -34,7 +34,7 @@ export class ImageItem extends ClipboardItem {
 	constructor(ext: CopyousExtension, entry: ClipboardEntry) {
 		super(ext, entry, Icon.Image, _('Image'));
 
-		this.imageItemSettings = ext.getSettings().get_child('image-item');
+		this.imageItemSettings = this.ext.settings.get_child('image-item');
 
 		this.add_style_class_name('image-item');
 		this.add_style_class_name('no-image-info');

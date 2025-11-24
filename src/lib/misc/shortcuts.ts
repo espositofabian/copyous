@@ -5,9 +5,9 @@ import Gio from 'gi://Gio';
 import Meta from 'gi://Meta';
 import Shell from 'gi://Shell';
 
-import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
+import type CopyousExtension from '../../extension.js';
 import { instanceofAction, instanceofActionSubmenu, loadConfig } from '../common/actions.js';
 import { getActionsConfigPath } from '../common/constants.js';
 import { registerClass } from '../common/gjs.js';
@@ -58,8 +58,6 @@ class ShortcutBinding extends GObject.Object {
 	},
 })
 export class ShortcutManager extends GObject.Object {
-	private readonly _settings: Gio.Settings;
-
 	private _actor: Clutter.Actor | null;
 	private _keyPressSignalId: number = -1;
 	private _keyReleaseSignalId: number = -1;
@@ -73,12 +71,10 @@ export class ShortcutManager extends GObject.Object {
 	private _monitor: Gio.FileMonitor;
 
 	constructor(
-		private ext: Extension,
+		private ext: CopyousExtension,
 		actor: Clutter.Actor,
 	) {
 		super();
-
-		this._settings = ext.getSettings();
 
 		this.registerGlobalShortcut(Shortcut.Open, 'open-clipboard-dialog');
 		this.registerGlobalShortcut(Shortcut.Incognito, 'toggle-incognito-mode');
@@ -103,7 +99,7 @@ export class ShortcutManager extends GObject.Object {
 	}
 
 	private registerGlobalShortcut(key: Shortcut, signal: string) {
-		Main.wm.addKeybinding(key, this._settings, Meta.KeyBindingFlags.NONE, Shell.ActionMode.ALL, () =>
+		Main.wm.addKeybinding(key, this.ext.settings, Meta.KeyBindingFlags.NONE, Shell.ActionMode.ALL, () =>
 			this.emit(signal),
 		);
 	}
@@ -113,8 +109,7 @@ export class ShortcutManager extends GObject.Object {
 	}
 
 	private registerShortcut(key: Shortcut) {
-		const settings = this.ext.getSettings();
-		this._shortcuts[key] = new ShortcutBinding(settings, key);
+		this._shortcuts[key] = new ShortcutBinding(this.ext.settings, key);
 	}
 
 	private keyPressEvent(_actor: Clutter.Actor, event: Clutter.Event) {

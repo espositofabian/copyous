@@ -1,9 +1,5 @@
-import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import Gio from 'gi://Gio';
-
-import type { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
-import type { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 
 import { ClipboardHistory } from './constants.js';
 import { registerClass } from './gjs.js';
@@ -145,55 +141,4 @@ export class DbusService extends GObject.Object implements DBusInterface {
 		this.confirmedShutdownId = -1;
 		this.prepareForShutdownId = -1;
 	}
-}
-
-Gio._promisify(Gio.DBusConnection.prototype, 'call');
-
-export async function disableExtension(ext: Extension | ExtensionPreferences): Promise<boolean> {
-	try {
-		const reply = await Gio.DBus.session.call(
-			'org.gnome.Shell.Extensions',
-			'/org/gnome/Shell/Extensions',
-			'org.gnome.Shell.Extensions',
-			'DisableExtension',
-			new GLib.Variant('(s)', [ext.uuid]),
-			null,
-			Gio.DBusCallFlags.NONE,
-			-1,
-			null,
-		);
-
-		return reply.get_child_value(0).get_boolean();
-	} catch (err) {
-		ext.getLogger().error(err);
-		return false;
-	}
-}
-
-export async function enableExtension(ext: Extension | ExtensionPreferences): Promise<boolean> {
-	try {
-		const reply = await Gio.DBus.session.call(
-			'org.gnome.Shell.Extensions',
-			'/org/gnome/Shell/Extensions',
-			'org.gnome.Shell.Extensions',
-			'EnableExtension',
-			new GLib.Variant('(s)', [ext.uuid]),
-			null,
-			Gio.DBusCallFlags.NONE,
-			-1,
-			null,
-		);
-
-		return reply.get_child_value(0).get_boolean();
-	} catch (err) {
-		ext.getLogger().error(err);
-		return false;
-	}
-}
-
-export async function reloadExtension(ext: Extension | ExtensionPreferences): Promise<boolean> {
-	const success = await disableExtension(ext);
-	if (!success) return false;
-
-	return await enableExtension(ext);
 }

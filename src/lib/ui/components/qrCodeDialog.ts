@@ -6,7 +6,7 @@ import St from 'gi://St';
 import * as Dialog from 'resource:///org/gnome/shell/ui/dialog.js';
 import * as ModalDialog from 'resource:///org/gnome/shell/ui/modalDialog.js';
 
-import CopyousExtension from '../../../extension.js';
+import type CopyousExtension from '../../../extension.js';
 import QrCodeGen from '../../../thirdparty/qrcodegen.js';
 import { registerClass } from '../../common/gjs.js';
 

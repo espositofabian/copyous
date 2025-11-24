@@ -22,8 +22,6 @@ export type State = (typeof State)[keyof typeof State];
 	},
 })
 export class StatusItem extends St.BoxLayout {
-	private settings: Gio.Settings;
-
 	private _state: State;
 
 	private readonly _emptyIcon: Gio.Icon;
@@ -31,7 +29,7 @@ export class StatusItem extends St.BoxLayout {
 	private readonly _icon: St.Icon;
 	private readonly _text: St.Label;
 
-	constructor(ext: CopyousExtension) {
+	constructor(private ext: CopyousExtension) {
 		super({
 			style_class: 'clipboard-item status-item',
 			orientation: Clutter.Orientation.VERTICAL,
@@ -78,8 +76,7 @@ export class StatusItem extends St.BoxLayout {
 		box.add_child(this._text);
 
 		// Bind properties
-		this.settings = ext.getSettings();
-		this.settings.connectObject(
+		ext.settings.connectObject(
 			'changed::item-width',
 			this.updateSize.bind(this),
 			'changed::item-height',
@@ -112,12 +109,12 @@ export class StatusItem extends St.BoxLayout {
 	}
 
 	private updateSize() {
-		this.width = this.settings.get_int('item-width');
-		this.height = this.settings.get_int('item-height');
+		this.width = this.ext.settings.get_int('item-width');
+		this.height = this.ext.settings.get_int('item-height');
 	}
 
 	override destroy() {
-		this.settings.disconnectObject(this);
+		this.ext.settings.disconnectObject(this);
 
 		super.destroy();
 	}

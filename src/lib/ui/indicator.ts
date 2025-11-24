@@ -1,6 +1,5 @@
 import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
 import St from 'gi://St';
 
 import { gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
@@ -69,8 +68,6 @@ class ConfirmClearHistoryDialog extends ModalDialog.ModalDialog {
 	},
 })
 export class ClipboardIndicator extends PanelMenu.Button {
-	private _settings: Gio.Settings;
-
 	private _incognito: boolean = false;
 
 	declare menu: PopupMenu.PopupMenu;
@@ -96,9 +93,7 @@ export class ClipboardIndicator extends PanelMenu.Button {
 		Main.panel.addToStatusArea(ext.uuid, this, 1, 'right');
 
 		// Bind properties
-		this._settings = ext.getSettings();
-
-		this._settings.connectObject(
+		this.ext.settings.connectObject(
 			'changed::show-indicator',
 			this.updateSettings.bind(this),
 			'changed::incognito',
@@ -118,13 +113,13 @@ export class ClipboardIndicator extends PanelMenu.Button {
 		this._incognitoSwitch.state = value;
 		this._incognito = value;
 		this._icon.gicon = (value ? Icon.ClipboardDisabled : Icon.Clipboard).load(this.ext);
-		this._settings.set_boolean('incognito', value);
+		this.ext.settings.set_boolean('incognito', value);
 		this.notify('incognito');
 	}
 
 	private updateSettings() {
-		this.visible = this._settings.get_boolean('show-indicator');
-		this.incognito = this._settings.get_boolean('incognito');
+		this.visible = this.ext.settings.get_boolean('show-indicator');
+		this.incognito = this.ext.settings.get_boolean('incognito');
 	}
 
 	toggleIncognito() {
@@ -132,7 +127,7 @@ export class ClipboardIndicator extends PanelMenu.Button {
 	}
 
 	animate() {
-		if (this._settings.get_boolean('wiggle-indicator')) {
+		if (this.ext.settings.get_boolean('wiggle-indicator')) {
 			animationUtils.wiggle(this._icon, { offset: 2, duration: 65, wiggleCount: 3 });
 		}
 	}
@@ -156,7 +151,7 @@ export class ClipboardIndicator extends PanelMenu.Button {
 	}
 
 	override destroy() {
-		this._settings.disconnectObject(this);
+		this.ext.settings.disconnectObject(this);
 
 		super.destroy();
 	}

@@ -1,7 +1,6 @@
 import Clutter from 'gi://Clutter';
 import Cogl from 'gi://Cogl';
 import GObject from 'gi://GObject';
-import Gio from 'gi://Gio';
 import Graphene from 'gi://Graphene';
 import Shell from 'gi://Shell';
 import St from 'gi://St';
@@ -41,8 +40,6 @@ export type MiddleClickAction = (typeof MiddleClickAction)[keyof typeof MiddleCl
 	},
 })
 export class ClipboardItem extends St.Button {
-	protected settings: Gio.Settings;
-
 	private _protectPinned: boolean = true;
 	private _protectTagged: boolean = true;
 	private _middleClickAction: MiddleClickAction = MiddleClickAction.None;
@@ -67,8 +64,6 @@ export class ClipboardItem extends St.Button {
 			width: 300,
 			height: 200,
 		});
-
-		this.settings = ext.getSettings();
 
 		this._box = new St.Widget({
 			style_class: 'clipboard-item-box',
@@ -102,7 +97,7 @@ export class ClipboardItem extends St.Button {
 		entry.bind_property('tag', this._header, 'tag', GObject.BindingFlags.SYNC_CREATE);
 
 		// prettier-ignore
-		this.settings.connectObject(
+		this.ext.settings.connectObject(
 			'changed::item-width', this.updateSize.bind(this),
 			'changed::item-height', this.updateSize.bind(this),
 			'changed::protect-pinned', this.updateProtection.bind(this),
@@ -146,20 +141,20 @@ export class ClipboardItem extends St.Button {
 	}
 
 	private updateSize() {
-		const width = this.settings.get_int('item-width');
-		const height = this.settings.get_int('item-height');
+		const width = this.ext.settings.get_int('item-width');
+		const height = this.ext.settings.get_int('item-height');
 		this.set_size(width, height);
 	}
 
 	private updateProtection() {
-		this._protectPinned = this.settings.get_boolean('protect-pinned');
-		this._protectTagged = this.settings.get_boolean('protect-tagged');
+		this._protectPinned = this.ext.settings.get_boolean('protect-pinned');
+		this._protectTagged = this.ext.settings.get_boolean('protect-tagged');
 		this._header.protectPinned = this._protectPinned;
 		this._header.protectTagged = this._protectTagged;
 	}
 
 	private updateMiddleClickAction() {
-		this._middleClickAction = this.settings.get_enum('middle-click-action') as MiddleClickAction;
+		this._middleClickAction = this.ext.settings.get_enum('middle-click-action') as MiddleClickAction;
 		if (this._middleClickAction === MiddleClickAction.None) {
 			this.button_mask &= ~St.ButtonMask.TWO;
 		} else {
@@ -168,10 +163,10 @@ export class ClipboardItem extends St.Button {
 	}
 
 	private updateHeader() {
-		const show = this.settings.get_boolean('show-header');
+		const show = this.ext.settings.get_boolean('show-header');
 		this._header.headerVisible = show;
-		this._header.showTitle = this.settings.get_boolean('show-item-title');
-		this._header.controlsVisibility = this.settings.get_enum(
+		this._header.showTitle = this.ext.settings.get_boolean('show-item-title');
+		this._header.controlsVisibility = this.ext.settings.get_enum(
 			'header-controls-visibility',
 		) as HeaderControlsVisibility;
 
@@ -278,7 +273,7 @@ export class ClipboardItem extends St.Button {
 	}
 
 	override destroy() {
-		this.settings.disconnectObject(this);
+		this.ext.settings.disconnectObject(this);
 
 		super.destroy();
 	}

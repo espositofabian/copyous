@@ -2,7 +2,7 @@ import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 
 import type { ExtensionPreferences } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
-import type { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
+import type { ConsoleLike, Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 
 import { ClipboardEntry } from '../misc/db.js';
 import { ColorSpace } from './color.js';
@@ -277,8 +277,9 @@ export function loadConfig(ext: Extension | ExtensionPreferences, save: boolean 
 			if (save) saveConfig(ext, config);
 			return config;
 		}
-	} catch {
-		ext.getLogger().error('Failed to load actions config');
+	} catch (err) {
+		const logger = 'logger' in ext ? (ext.logger as ConsoleLike) : ext.getLogger();
+		logger.error('Failed to load actions config', err);
 	}
 
 	return defaultConfig(ext);

@@ -1,5 +1,4 @@
 import Clutter from 'gi://Clutter';
-import Gio from 'gi://Gio';
 import St from 'gi://St';
 
 import { gettext as _ } from 'resource:///org/gnome/shell/extensions/extension.js';
@@ -23,14 +22,14 @@ function canEdit(entry: ClipboardEntry): boolean {
 
 @registerClass()
 class PopupMenuShortcutItem extends PopupMenu.PopupBaseMenuItem {
-	private readonly _settings: Gio.Settings;
-
 	private readonly _shortcutLabel: ShortcutLabel;
 
-	constructor(ext: CopyousExtension, text: string, shortcut: Shortcut) {
+	constructor(
+		private ext: CopyousExtension,
+		text: string,
+		shortcut: Shortcut,
+	) {
 		super();
-
-		this._settings = ext.getSettings();
 
 		const label = new St.Label({
 			text,
@@ -39,7 +38,7 @@ class PopupMenuShortcutItem extends PopupMenu.PopupBaseMenuItem {
 		});
 		this.add_child(label);
 
-		this._shortcutLabel = new ShortcutLabel(this._settings.get_strv(shortcut)[0] ?? '', {
+		this._shortcutLabel = new ShortcutLabel(this.ext.settings.get_strv(shortcut)[0] ?? '', {
 			x_expand: true,
 			y_expand: true,
 			x_align: Clutter.ActorAlign.END,
@@ -48,15 +47,15 @@ class PopupMenuShortcutItem extends PopupMenu.PopupBaseMenuItem {
 		});
 		this.add_child(this._shortcutLabel);
 
-		this._settings.connectObject(
+		this.ext.settings.connectObject(
 			`changed::${shortcut}`,
-			() => (this._shortcutLabel.shortcut = this._settings.get_strv(shortcut)[0] ?? ''),
+			() => (this._shortcutLabel.shortcut = this.ext.settings.get_strv(shortcut)[0] ?? ''),
 			this,
 		);
 	}
 
 	override destroy() {
-		this._settings.disconnectObject(this);
+		this.ext.settings.disconnectObject(this);
 
 		super.destroy();
 	}

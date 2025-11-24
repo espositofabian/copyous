@@ -279,6 +279,8 @@ export class FeedbackSettings extends Adw.PreferencesGroup {
 				playSound.sensitive = true;
 			}
 		});
+
+		this.connect('destroy', () => this._soundManager?.destroy());
 	}
 
 	private updateSoundLabel() {
