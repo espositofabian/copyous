@@ -1,4 +1,5 @@
 import Adw from 'gi://Adw';
+// DEBUG-ONLY
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import Gdk from 'gi://Gdk';

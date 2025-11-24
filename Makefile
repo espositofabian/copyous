@@ -107,8 +107,8 @@ $(DIST_DIR)/extension.js: $(SRC) tsconfig.json | $(DIST_DIR)
 	pnpm exec tsc
 	@touch $@
 ifeq ($(RELEASE),1)
-# Remove code blocks commented with /* DEBUG-ONLY */
-	find $(@D) -name '*.js' -exec perl -0777 -i -pe 's/^(\s*)\/\* DEBUG-ONLY \*\/(?:.|\n)*?^\1\}//gm' {} \;
+# Remove code blocks commented with /* DEBUG-ONLY */ or lines ending with // DEBUG-ONLY
+	find $(@D) -name '*.js' -exec perl -0777 -i -pe 's/^(\s*)\/\* DEBUG-ONLY \*\/(?:.|\n)*?^\1\}|\/\/ DEBUG-ONLY.*\n.*$$//gm' {} \;
 # Format code to make it easier for EGO reviewers
 	-pnpm exec eslint $(DIST_DIR) --config ./format.eslint.config.js --fix --cache --cache-location=$(DIST_DIR)/.eslintcache
 	pnpm exec prettier $(DIST_DIR) --ignore-path= --log-level=warn --write --cache --cache-location=$(DIST_DIR)/.prettiercache
