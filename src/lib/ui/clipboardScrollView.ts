@@ -81,6 +81,10 @@ export class ClipboardScrollView extends St.ScrollView {
 		this._scrollContainer.addItem(item);
 	}
 
+	public clearItems() {
+		this._scrollContainer.remove_all_children();
+	}
+
 	public selectItem(index: number): boolean {
 		return this._scrollContainer.selectItem(index);
 	}

@@ -387,6 +387,10 @@ export class ClipboardDialog extends St.Widget {
 		this._scrollView.addItem(item);
 	}
 
+	public clearEntries() {
+		this._scrollView.clearItems();
+	}
+
 	private updateHeader(show: boolean, animate: boolean = true) {
 		if (this._searchEntry.text.length > 0) show = true;
 
