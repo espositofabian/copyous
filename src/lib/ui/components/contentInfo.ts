@@ -8,6 +8,7 @@ import St from 'gi://St';
 
 import { Extension, gettext as _, ngettext } from 'resource:///org/gnome/shell/extensions/extension.js';
 
+import type CopyousExtension from '../../../extension.js';
 import { enumParamSpec, registerClass } from '../../common/gjs.js';
 import { Icon, loadIcon } from '../../common/icons.js';
 import { FileType } from './contentPreview.js';
@@ -278,7 +279,12 @@ export function tryCreateImageInfo(file: Gio.File, size: number): ImageInfo | nu
 	}
 }
 
-export async function tryCreateMediaFileInfo(ext: Extension, file: Gio.File, size: number): Promise<MediaInfo | null> {
+export async function tryCreateMediaFileInfo(
+	ext: CopyousExtension,
+	file: Gio.File,
+	size: number,
+	cancellable: Gio.Cancellable,
+): Promise<MediaInfo | null> {
 	try {
 		if (!Gst.is_initialized()) {
 			Gst.init(null);
@@ -295,16 +301,20 @@ export async function tryCreateMediaFileInfo(ext: Extension, file: Gio.File, siz
 
 			await new Promise<void>((resolve) => {
 				let i = 0;
-				GLib.timeout_add(GLib.PRIORITY_DEFAULT, 50, () => {
+				const timeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 50, () => {
 					[success, duration] = pipeline.query_duration(Gst.Format.TIME);
 					if (success || i >= 5) {
 						resolve();
+						cancellable.disconnect(cancellableId);
 						return GLib.SOURCE_REMOVE;
 					}
 
 					i++;
+					cancellable.disconnect(cancellableId);
 					return GLib.SOURCE_CONTINUE;
 				});
+
+				const cancellableId = cancellable.connect(() => GLib.source_remove(timeoutId));
 			});
 		}
 
@@ -315,12 +325,18 @@ export async function tryCreateMediaFileInfo(ext: Extension, file: Gio.File, siz
 		} else {
 			return null;
 		}
-	} catch {
+	} catch (err) {
+		ext.logger.error(err);
 		return null;
 	}
 }
 
-export async function createFileInfo(ext: Extension, file: Gio.File, fileType: FileType): Promise<FileInfo> {
+export async function createFileInfo(
+	ext: CopyousExtension,
+	file: Gio.File,
+	fileType: FileType,
+	cancellable: Gio.Cancellable,
+): Promise<FileInfo> {
 	try {
 		if (!file.query_exists(null)) {
 			return new MissingFileInfo(ext);
@@ -344,7 +360,7 @@ export async function createFileInfo(ext: Extension, file: Gio.File, fileType: F
 				break;
 			case FileType.Audio:
 			case FileType.Video:
-				fileInfo = await tryCreateMediaFileInfo(ext, file, size);
+				fileInfo = await tryCreateMediaFileInfo(ext, file, size, cancellable);
 				break;
 		}
 

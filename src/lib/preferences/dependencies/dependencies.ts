@@ -325,7 +325,7 @@ export class DependenciesWarningButton extends Gtk.MenuButton {
 	private readonly _menu: Gio.Menu;
 	private _items: string[] = ['libgda', 'gsound', 'hljs'];
 
-	private _cancellable: Gio.Cancellable | null = null;
+	private readonly _cancellable: Gio.Cancellable = new Gio.Cancellable();
 
 	constructor(prefs: ExtensionPreferences, window: Adw.PreferencesWindow) {
 		super({
@@ -371,9 +371,7 @@ export class DependenciesWarningButton extends Gtk.MenuButton {
 				this.remove_css_class('warning');
 
 				// Start download
-				this._cancellable = new Gio.Cancellable();
 				const success = await downloadHljs(prefs, this._cancellable);
-				this._cancellable = null;
 
 				// Hide spinner
 				this.set_child(null);
@@ -409,7 +407,8 @@ export class DependenciesWarningButton extends Gtk.MenuButton {
 			}
 		});
 
-		this.connect('destroy', () => this._cancellable?.cancel());
+		// Cancel operations on destroy
+		this.connect('destroy', () => this._cancellable.cancel());
 
 		// Menu
 		const actionGroup = new Gio.SimpleActionGroup();

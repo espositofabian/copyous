@@ -2,6 +2,7 @@ import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import type Gda5 from 'gi://Gda?version=5.0';
 import type Gda6 from 'gi://Gda?version=6.0';
+import Gio from 'gi://Gio';
 
 export interface SqlBuilder<T> extends Omit<Gda5.SqlBuilder, 'add_field_value_as_gvalue'> {
 	add_id<K extends Extract<keyof T, string>>(str: K): Gda5.SqlBuilderId;
@@ -78,6 +79,7 @@ export function async_statement_execute_select<T>(
 	Gda: typeof Gda5 | typeof Gda6,
 	connection: Gda5.Connection | Gda6.Connection,
 	statement: Gda5.Statement | Gda6.Statement,
+	cancellable: Gio.Cancellable,
 ): Promise<DataModel<T>> {
 	return new Promise((resolve, reject) => {
 		if ('async_statement_execute' in connection) {
@@ -91,7 +93,7 @@ export function async_statement_execute_select<T>(
 			);
 
 			let i = 0;
-			GLib.timeout_add(GLib.PRIORITY_HIGH, 100, () => {
+			const timeoutId = GLib.timeout_add(GLib.PRIORITY_HIGH, 100, () => {
 				try {
 					const [result] = connection.async_fetch_result(id);
 					if (result) {
@@ -100,21 +102,27 @@ export function async_statement_execute_select<T>(
 						} else {
 							reject(new Error('Statement is not a selection statement'));
 						}
+						cancellable.disconnect(cancellableId);
 						return GLib.SOURCE_REMOVE;
 					}
 
 					if (i >= 10) {
 						reject(new Error('Timeout'));
+						cancellable.disconnect(cancellableId);
 						return GLib.SOURCE_REMOVE;
 					}
 
 					i++;
+					cancellable.disconnect(cancellableId);
 					return GLib.SOURCE_CONTINUE;
 				} catch (error) {
 					reject(error as Error);
+					cancellable.disconnect(cancellableId);
 					return GLib.SOURCE_REMOVE;
 				}
 			});
+
+			const cancellableId = cancellable.connect(() => GLib.source_remove(timeoutId));
 		} else {
 			// Gda 6
 			GLib.idle_add(GLib.PRIORITY_HIGH, () => {
@@ -135,6 +143,7 @@ export function async_statement_execute_non_select(
 	Gda: typeof Gda5 | typeof Gda6,
 	connection: Gda5.Connection | Gda6.Connection,
 	statement: Gda5.Statement | Gda6.Statement,
+	cancellable: Gio.Cancellable,
 ): Promise<[number, Gda5.Set | Gda6.Set | null]> {
 	return new Promise((resolve, reject) => {
 		if ('async_statement_execute' in connection) {
@@ -148,7 +157,7 @@ export function async_statement_execute_non_select(
 			);
 
 			let i = 0;
-			GLib.timeout_add(GLib.PRIORITY_HIGH, 100, () => {
+			const timeoutId = GLib.timeout_add(GLib.PRIORITY_HIGH, 100, () => {
 				try {
 					const [result, lastRow] = connection.async_fetch_result(id);
 					if (result) {
@@ -158,21 +167,27 @@ export function async_statement_execute_non_select(
 						} else {
 							reject(new Error('Statement is a selection statement'));
 						}
+						cancellable.disconnect(cancellableId);
 						return GLib.SOURCE_REMOVE;
 					}
 
 					if (i >= 10) {
 						reject(new Error('Timeout'));
+						cancellable.disconnect(cancellableId);
 						return GLib.SOURCE_REMOVE;
 					}
 
 					i++;
+					cancellable.disconnect(cancellableId);
 					return GLib.SOURCE_CONTINUE;
 				} catch (error) {
 					reject(error as Error);
+					cancellable.disconnect(cancellableId);
 					return GLib.SOURCE_REMOVE;
 				}
 			});
+
+			const cancellableId = cancellable.connect(() => GLib.source_remove(timeoutId));
 		} else {
 			// Gda 6
 			GLib.idle_add(GLib.PRIORITY_HIGH, () => {

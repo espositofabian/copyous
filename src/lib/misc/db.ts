@@ -502,6 +502,7 @@ function unescapeContent(content: string): string {
 export class GdaDatabase implements Database {
 	private readonly _Gda: typeof Gda;
 	private readonly _connection: Gda.Connection;
+	private readonly _cancellable: Gio.Cancellable = new Gio.Cancellable();
 
 	constructor(
 		private ext: CopyousExtension,
@@ -549,7 +550,7 @@ export class GdaDatabase implements Database {
 				UNIQUE ('type', 'content')
 			);
 		`);
-		await async_statement_execute_non_select(this._Gda, this._connection, stmt);
+		await async_statement_execute_non_select(this._Gda, this._connection, stmt, this._cancellable);
 	}
 
 	public async clear(history: ClipboardHistory): Promise<number[]> {
@@ -566,6 +567,7 @@ export class GdaDatabase implements Database {
 				this._Gda,
 				this._connection,
 				selectStmt,
+				this._cancellable,
 			);
 
 			const deleted: number[] = [];
@@ -587,7 +589,7 @@ export class GdaDatabase implements Database {
 				}
 
 				const deleteStmt = deleteBuilder.get_statement();
-				await async_statement_execute_non_select(this._Gda, this._connection, deleteStmt);
+				await async_statement_execute_non_select(this._Gda, this._connection, deleteStmt, this._cancellable);
 			}
 
 			return deleted;
@@ -600,6 +602,7 @@ export class GdaDatabase implements Database {
 
 	public close(): Promise<void> {
 		this._connection.close();
+		this._cancellable.cancel();
 		return Promise.resolve();
 	}
 
@@ -618,7 +621,12 @@ export class GdaDatabase implements Database {
 			builder.select_order_by(datetimeId, false, null);
 
 			const stmt = builder.get_statement();
-			const dataModel = await async_statement_execute_select<ClipboardEntry>(this._Gda, this._connection, stmt);
+			const dataModel = await async_statement_execute_select<ClipboardEntry>(
+				this._Gda,
+				this._connection,
+				stmt,
+				this._cancellable,
+			);
 
 			const entries: ClipboardEntry[] = [];
 			const iter = dataModel.create_iter();
@@ -695,7 +703,12 @@ export class GdaDatabase implements Database {
 
 			// Get id
 			const stmt = builder.get_statement();
-			const datamodel = await async_statement_execute_select<ClipboardEntry>(this._Gda, this._connection, stmt);
+			const datamodel = await async_statement_execute_select<ClipboardEntry>(
+				this._Gda,
+				this._connection,
+				stmt,
+				this._cancellable,
+			);
 			const iter = datamodel.create_iter();
 			if (iter.move_next()) {
 				return iter.get_value_for_field('id');
@@ -732,7 +745,12 @@ export class GdaDatabase implements Database {
 
 			// Execute
 			const stmt = builder.get_statement();
-			const [, row] = await async_statement_execute_non_select(this._Gda, this._connection, stmt);
+			const [, row] = await async_statement_execute_non_select(
+				this._Gda,
+				this._connection,
+				stmt,
+				this._cancellable,
+			);
 			const id = row?.get_nth_holder(0).get_value() as unknown as number;
 			if (id == null) return null;
 
@@ -773,7 +791,12 @@ export class GdaDatabase implements Database {
 			// Escape the null value since the bindings for Gda5 do not support Gda.Null
 			const stmt = unescape_sql(this._connection, builder);
 
-			const [rows] = await async_statement_execute_non_select(this._Gda, this._connection, stmt);
+			const [rows] = await async_statement_execute_non_select(
+				this._Gda,
+				this._connection,
+				stmt,
+				this._cancellable,
+			);
 			if (rows !== -1 || (property !== 'type' && property !== 'content')) {
 				return -1; // success
 			}
@@ -805,7 +828,7 @@ export class GdaDatabase implements Database {
 			);
 
 			const stmt = builder.get_statement();
-			await async_statement_execute_non_select(this._Gda, this._connection, stmt);
+			await async_statement_execute_non_select(this._Gda, this._connection, stmt, this._cancellable);
 		} catch (e) {
 			this.ext.logger.error(`Failed to delete entry ${entry.id}`, e);
 		}
@@ -850,13 +873,19 @@ export class GdaDatabase implements Database {
 				this._Gda,
 				this._connection,
 				selectStmt,
+				this._cancellable,
 			);
 
 			// DELETE FROM table WHERE id IN (select)
 			// add_subselect is not exposed as a javascript binding in Gda 5.0
 			const selectSql = this._connection.statement_to_sql(selectStmt, selectStmt.get_parameters()[1], null)[0];
 			const [deleteStmt] = this._connection.parse_sql_string(`DELETE FROM clipboard WHERE id IN (${selectSql})`);
-			const [rows] = await async_statement_execute_non_select(this._Gda, this._connection, deleteStmt);
+			const [rows] = await async_statement_execute_non_select(
+				this._Gda,
+				this._connection,
+				deleteStmt,
+				this._cancellable,
+			);
 
 			// Get ids
 			const deleted: number[] = [];

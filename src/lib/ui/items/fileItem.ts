@@ -57,6 +57,8 @@ export class FileItem extends ClipboardItem {
 	private _filePreview?: ContentPreview | null;
 	private _fileInfo?: ContentInfo;
 
+	private readonly _cancellable: Gio.Cancellable = new Gio.Cancellable();
+
 	constructor(ext: CopyousExtension, entry: ClipboardEntry) {
 		super(ext, entry, Icon.File, _('File'));
 
@@ -177,7 +179,7 @@ export class FileItem extends ClipboardItem {
 				[this._fileType, this._thumbnail] = await getFileType(file);
 			}
 
-			this._fileInfo = await createFileInfo(this.ext, file, this._fileType);
+			this._fileInfo = await createFileInfo(this.ext, file, this._fileType, this._cancellable);
 			this._content.add_child(this._fileInfo);
 			this.configureVisibility();
 		}
@@ -219,6 +221,7 @@ export class FileItem extends ClipboardItem {
 
 	override destroy() {
 		this.fileItemSettings.disconnectObject(this);
+		this._cancellable.cancel();
 
 		super.destroy();
 	}

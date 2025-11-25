@@ -217,7 +217,6 @@ export class ActionPopupMenuSection extends PopupMenu.PopupMenuSection<ActionPop
 
 			// Wait for the command to complete and handle the output
 			const [stdout, stderr] = await process.communicate_utf8_async(entry.content, token);
-			token.cancel();
 
 			if (process.get_successful()) {
 				const output = trim(stdout);
@@ -236,6 +235,8 @@ export class ActionPopupMenuSection extends PopupMenu.PopupMenuSection<ActionPop
 			}
 		} catch (e) {
 			this.ext.logger.error(e);
+		} finally {
+			token.cancel();
 		}
 	}
 
