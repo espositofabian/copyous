@@ -102,6 +102,8 @@ export class ClipboardIndicator extends PanelMenu.Button {
 		);
 
 		this.bind_property('incognito', this._incognitoSwitch, 'state', GObject.BindingFlags.BIDIRECTIONAL);
+
+		this.updateSettings();
 	}
 
 	get incognito() {
