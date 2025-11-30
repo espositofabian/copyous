@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Copyous\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-30 15:39+0000\n"
+"POT-Creation-Date: 2025-11-30 18:36+0000\n"
 "PO-Revision-Date: 2025-11-30 20:29+0700\n"
 "Last-Translator: Victor <firephantom303@gmail.com>\n"
 "Language-Team: Russian\n"
@@ -1330,20 +1330,20 @@ msgstr "WM-класс"
 msgid "No Exclusions"
 msgstr "Нет исключений"
 
-#: src/lib/preferences/general/appExclusionSettings.ts:291
-#: src/lib/preferences/general/appExclusionSettings.ts:302
+#: src/lib/preferences/general/appExclusionSettings.ts:296
+#: src/lib/preferences/general/appExclusionSettings.ts:307
 msgid "App Exclusions"
 msgstr "Исключения приложений"
 
-#: src/lib/preferences/general/appExclusionSettings.ts:315
+#: src/lib/preferences/general/appExclusionSettings.ts:320
 msgid "Exclusions"
 msgstr "Исключения"
 
-#: src/lib/preferences/general/appExclusionSettings.ts:321
+#: src/lib/preferences/general/appExclusionSettings.ts:326
 msgid "Manage App Exclusions"
 msgstr "Управление исключениями приложений"
 
-#: src/lib/preferences/general/appExclusionSettings.ts:322
+#: src/lib/preferences/general/appExclusionSettings.ts:327
 msgid "Manage apps that will be excluded from clipboard history"
 msgstr "Управлять приложениями, исключёнными из истории буфера обмена"
 

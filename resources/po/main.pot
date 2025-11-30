@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Copyous\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-30 15:39+0000\n"
+"POT-Creation-Date: 2025-11-30 18:36+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1302,20 +1302,20 @@ msgstr ""
 msgid "No Exclusions"
 msgstr ""
 
-#: src/lib/preferences/general/appExclusionSettings.ts:291
-#: src/lib/preferences/general/appExclusionSettings.ts:302
+#: src/lib/preferences/general/appExclusionSettings.ts:296
+#: src/lib/preferences/general/appExclusionSettings.ts:307
 msgid "App Exclusions"
 msgstr ""
 
-#: src/lib/preferences/general/appExclusionSettings.ts:315
+#: src/lib/preferences/general/appExclusionSettings.ts:320
 msgid "Exclusions"
 msgstr ""
 
-#: src/lib/preferences/general/appExclusionSettings.ts:321
+#: src/lib/preferences/general/appExclusionSettings.ts:326
 msgid "Manage App Exclusions"
 msgstr ""
 
-#: src/lib/preferences/general/appExclusionSettings.ts:322
+#: src/lib/preferences/general/appExclusionSettings.ts:327
 msgid "Manage apps that will be excluded from clipboard history"
 msgstr ""
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Copyous\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-30 15:39+0000\n"
+"POT-Creation-Date: 2025-11-30 18:36+0000\n"
 "PO-Revision-Date: 2025-11-30 18:06+0100\n"
 "Last-Translator: Christian Lauinger <christian@lauinger-clan.de>\n"
 "Language-Team: \n"
@@ -1358,20 +1358,20 @@ msgstr "WM Klasse"
 msgid "No Exclusions"
 msgstr "Keine Ausschlüsse"
 
-#: src/lib/preferences/general/appExclusionSettings.ts:291
-#: src/lib/preferences/general/appExclusionSettings.ts:302
+#: src/lib/preferences/general/appExclusionSettings.ts:296
+#: src/lib/preferences/general/appExclusionSettings.ts:307
 msgid "App Exclusions"
 msgstr "App-Ausschlüsse"
 
-#: src/lib/preferences/general/appExclusionSettings.ts:315
+#: src/lib/preferences/general/appExclusionSettings.ts:320
 msgid "Exclusions"
 msgstr "Ausschlüsse"
 
-#: src/lib/preferences/general/appExclusionSettings.ts:321
+#: src/lib/preferences/general/appExclusionSettings.ts:326
 msgid "Manage App Exclusions"
 msgstr "App-Ausschlüsse verwalten"
 
-#: src/lib/preferences/general/appExclusionSettings.ts:322
+#: src/lib/preferences/general/appExclusionSettings.ts:327
 msgid "Manage apps that will be excluded from clipboard history"
 msgstr ""
 "Verwalten Sie Apps, die aus dem Verlauf der Zwischenablage ausgeschlossen "

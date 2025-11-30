@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Copyous\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-30 15:39+0000\n"
+"POT-Creation-Date: 2025-11-30 18:36+0000\n"
 "PO-Revision-Date: 2025-11-29 19:52+0100\n"
 "Last-Translator: Philippe Charlanes\n"
 "Language-Team: \n"
@@ -1363,20 +1363,20 @@ msgstr "Classe WM"
 msgid "No Exclusions"
 msgstr "Aucune exclusion"
 
-#: src/lib/preferences/general/appExclusionSettings.ts:291
-#: src/lib/preferences/general/appExclusionSettings.ts:302
+#: src/lib/preferences/general/appExclusionSettings.ts:296
+#: src/lib/preferences/general/appExclusionSettings.ts:307
 msgid "App Exclusions"
 msgstr "Exclusions d'applications"
 
-#: src/lib/preferences/general/appExclusionSettings.ts:315
+#: src/lib/preferences/general/appExclusionSettings.ts:320
 msgid "Exclusions"
 msgstr "Exclusions"
 
-#: src/lib/preferences/general/appExclusionSettings.ts:321
+#: src/lib/preferences/general/appExclusionSettings.ts:326
 msgid "Manage App Exclusions"
 msgstr "Gérer les exclusions d'applications"
 
-#: src/lib/preferences/general/appExclusionSettings.ts:322
+#: src/lib/preferences/general/appExclusionSettings.ts:327
 msgid "Manage apps that will be excluded from clipboard history"
 msgstr ""
 "Gérer les applications qui seront exclues de l'historique du presse-papiers"
